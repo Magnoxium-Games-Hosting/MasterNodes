@@ -1,0 +1,56 @@
+---
+- hosts: all
+
+  tasks:
+  - name: Install https transport
+    ansible.builtin.apt:
+      name: apt-transport-https
+      state: present
+
+  - name: Install ca-certificates
+    ansible.builtin.apt:
+      name: ca-certificates
+      state: present
+
+  - name: Install curl
+    ansible.builtin.apt:
+      name: curl
+      state: present
+
+  - name: Download the Google Cloud public signing key
+    ansible.builtin.apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+
+  - name: Add the Kubernetes apt repository
+    ansible.builtin.apt_repository:
+      repo: "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main"
+      state: present
+
+  - name: Update apt package index
+    ansible.builtin.apt:
+      update_cache: yes
+
+  - name: Install a list of packages
+    ansible.builtin.apt:
+      pkg:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+  - name: list current holds
+    command: apt-mark showhold
+    register: held_packages
+    changed_when: false
+
+  - name: mark hold on kubelet
+    command: apt-mark hold kubelet
+    when: '"kubelet" not in held_packages.stdout'
+
+  - name: mark hold on kubeadm
+    command: apt-mark hold kubeadm
+    when: '"kubeadm" not in held_packages.stdout'
+
+  - name: mark hold on kubectl
+    command: apt-mark hold kubectl
+    when: '"kubectl" not in held_packages.stdout'
