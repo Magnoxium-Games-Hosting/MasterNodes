@@ -1,6 +1,8 @@
 ---
 - hosts: all
-
+  become_user: devops
+  become: yes
+  become_method: sudo
   tasks:
   - name: Update apt package index
     ansible.builtin.apt:
