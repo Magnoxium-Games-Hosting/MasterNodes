@@ -1,0 +1,67 @@
+---
+- hosts: all
+
+  tasks:
+  - name: Update apt package index
+    ansible.builtin.apt:
+      update_cache: yes
+
+  - name: Install a list of packages
+    ansible.builtin.apt:
+      pkg:
+      - ca-certificates
+      - curl 
+      - gnupg 
+      - lsb-release
+      - apt-transport-https
+
+  - name: Add dockers gpg key
+    ansible.builtin.apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      keyring: /etc/apt/keyrings/docker.gpg
+
+  - name: Add the Kubernetes apt repository
+    ansible.builtin.apt_repository:
+      repo: "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+      state: present
+
+  - name: Update apt package index
+    ansible.builtin.apt:
+      update_cache: yes
+
+  - name: Install a list of packages
+    ansible.builtin.apt:
+      pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+
+  - name: Start rancher container
+    community.docker.docker_container:
+      name: rancher
+      image: rancher/rancher:latest
+      state: started
+      privileged: true
+      restart_policy: "unless-stopped"
+      command: --acme-domain rancher.magnoxium.com
+      ports:
+        - "80:80"
+        - "443:443"
+
+  - name: list current holds
+    command: apt-mark showhold
+    register: held_packages
+    changed_when: false
+
+  - name: mark hold on docker-ce-cli
+    command: apt-mark hold docker-ce-cli
+    when: '"docker-ce-cli" not in held_packages.stdout'
+
+  - name: mark hold on docker-ce
+    command: apt-mark hold docker-ce
+    when: '"docker-ce" not in held_packages.stdout'
+
+  - name: mark hold on containerd.io
+    command: apt-mark hold containerd.io
+    when: '"containerd.io" not in held_packages.stdout'
