@@ -45,12 +45,11 @@
 
   - name: Start rancher container
     community.docker.docker_container:
-      name: rancher
+      name: rancher-slef-signed
       image: rancher/rancher:latest
       state: started
       privileged: true
       restart_policy: "unless-stopped"
-      command: --acme-domain rancher.magnoxium.com
       ports:
         - "80:80"
         - "443:443"
