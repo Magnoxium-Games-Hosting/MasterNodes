@@ -37,6 +37,7 @@
       - docker-ce-cli
       - containerd.io
       - docker-compose-plugin
+      - python3-pip
 
   - name: Install docker python package
     ansible.builtin.pip:
