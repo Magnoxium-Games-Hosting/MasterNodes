@@ -1,6 +1,5 @@
 ---
 - hosts: all
-  become_user: devops
   become: yes
   become_method: sudo
   tasks:
