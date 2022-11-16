@@ -38,6 +38,10 @@
       - containerd.io
       - docker-compose-plugin
 
+  - name: Install docker python package
+    ansible.builtin.pip:
+      name: docker
+
   - name: Start rancher container
     community.docker.docker_container:
       name: rancher
